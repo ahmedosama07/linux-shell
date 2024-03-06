@@ -4,9 +4,9 @@ This is a simple shell program written in C. It provides basic functionality suc
 
 ## File Structure
 
-- `shell.h`: Header file containing function declarations and constants.
-- `shell.c`: Source file containing function definitions for the shell program.
-- `main.c`: Source file containing the main function to run the shell program.
+- `src/shell.h`: Header file containing function declarations and constants.
+- `src/shell.c`: Source file containing function definitions for the shell program.
+- `src/main.c`: Source file containing the main function to run the shell program.
 - `Makefile`: Makefile for compiling the shell program.
 - `README.md`: This file providing information about the shell program.
 

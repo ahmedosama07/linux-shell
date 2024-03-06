@@ -1,18 +1,23 @@
 CC = gcc
 CFLAGS = -Wall -Wextra
 
+SRC_DIR=src
+BUILD_DIR=build
+
 .PHONY: clean
 
 all: main
 
 main: main.o obj
-	$(CC) $(CFLAGS) -o linux-shell.o main.o shell.o
+	mkdir $(BUILD_DIR)/
+	$(CC) $(CFLAGS) -o $(BUILD_DIR)/linux-shell.o main.o shell.o
+	rm main.o shell.o
 
-main.o: main.c shell.h
-	$(CC) $(CFLAGS) -c main.c
+main.o: $(SRC_DIR)/main.c $(SRC_DIR)/shell.h
+	$(CC) $(CFLAGS) -c $(SRC_DIR)/main.c
 
-obj: shell.c shell.h
-	$(CC) $(CFLAGS) -c shell.c
+obj: $(SRC_DIR)/shell.c $(SRC_DIR)/shell.h
+	$(CC) $(CFLAGS) -c $(SRC_DIR)/shell.c
 
 clean:
-	rm -f main main.o shell.o
+	rm -r $(BUILD_DIR)/

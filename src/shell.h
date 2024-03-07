@@ -1,13 +1,23 @@
 #ifndef SHELL_H
 #define SHELL_H
 
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <sys/types.h>
+#include <signal.h>
+#include <sys/resource.h>
+
 #define ARRAY_SIZE 100
 
 void read_input(void);
 void parse_export(char *token);
 void parse_input(void);
-void execute_shell_bultin(void);
 void execute_command(void);
+uint8_t execute_shell_builtin(void);
 void write_to_log_file(void);
 extern void on_child_exit(void);
 void shell(void);

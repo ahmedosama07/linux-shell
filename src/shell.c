@@ -53,6 +53,53 @@ char* replace_substring(const char *string, const char *substring, const char *r
     return newString;
 }
 
+// Function to remove preceding white spaces from a string
+char* remove_leading_spaces(char* str) {
+    if (str == NULL) {
+        return NULL; // Return NULL if the input string is NULL
+    }
+    
+    int len = strlen(str);
+    int i, j;
+
+    // Find the index of the first non-space character
+    for (i = 0; i < len; i++) {
+        if (str[i] != ' ' && str[i] != '\t' && str[i] != '\n' && str[i] != '\r') {
+            break;
+        }
+    }
+
+    // Shift characters to the left to remove preceding spaces
+    for (j = 0; i < len; i++, j++) {
+        str[j] = str[i];
+    }
+    str[j] = '\0'; // Null-terminate the string at the new length
+
+    return str;
+}
+
+// Function to remove trailing white spaces from a string
+char* remove_trailing_spaces(char* str) {
+    if (str == NULL) {
+        return NULL; // Return NULL if the input string is NULL
+    }
+    
+    int len = strlen(str);
+    int i;
+
+    // Find the index of the last non-space character
+    for (i = len - 1; i >= 0; i--) {
+        if (str[i] != ' ' && str[i] != '\t' && str[i] != '\n' && str[i] != '\r') {
+            break;
+        }
+    }
+
+    // Null-terminate the string at the last non-space character
+    str[i + 1] = '\0';
+
+    return str;
+}
+
 /* Function to get input from the user */
 void read_input(void){
     char cwd[1024];
@@ -61,7 +108,16 @@ void read_input(void){
     getlogin_r(username, sizeof(username));
     gethostname(hostname, sizeof(hostname));
     printf("%s@%s:%s $ ", username, hostname,replace_substring(getcwd(cwd , 100), getenv("HOME"), "~"));
-    scanf("%[^\n]%*c", input);
+    while (1) {
+        fgets(input, sizeof(input), stdin); // Read input using fgets
+        input[strcspn(input, "\n")] = '\0'; // Remove trailing newline character
+        
+        // Check if input is empty
+        if (strlen(input) > 0) {
+            break; // Exit loop if input is not empty
+        }
+		printf("%s@%s:%s $ ", username, hostname, replace_substring(getcwd(cwd, 100), getenv("HOME"), "~"));
+    }
 }
 
 
@@ -115,46 +171,34 @@ void execute_shell_bultin(void){
         }
     }
     else if(exportFlag){
-        char* data = parsedInput[2];
+        char* data = remove_leading_spaces(parsedInput[2]);
+		char* env = remove_trailing_spaces(parsedInput[1]);
         /* Check for quotation marks */
         if(data[0] == '"'){
             data++;
             data[strlen(data)-1] = '\0';
-            setenv(parsedInput[1] , data , 1);
+			setenv(env, data , 1);
         }
         else{
-            setenv(parsedInput[1] , parsedInput[2] , 1);
+            setenv(env, data , 1);
         }
     }
     else if(echoFlag){
-        char*echoEnv = parsedInput[1];
-        if(parsedInput[2] == NULL){
-            echoEnv++;
-            echoEnv[strlen(echoEnv) - 1] = '\0';
-            if(echoEnv[0] == '$'){
+			int i = 1;
+			for(i = 1; i <= backGroundIndex; i++)
+			{
+				char *echoEnv = parsedInput[i];
+				if(echoEnv[0] == '$'){
                 echoEnv++;
-                printf("%s\n",getenv(echoEnv));
-            }
-            else{
-                printf("%s\n",echoEnv);
-            }
-        }
-        else{
-            char*temp = parsedInput[2];
-            echoEnv++;
-            if(echoEnv[0] == '$'){
-                echoEnv++;
-                printf("%s ",getenv(echoEnv));
-                temp[strlen(temp)-1] = '\0';
-                printf("%s\n",temp);
+                char* temp = getenv(echoEnv);
+				if(temp == NULL) printf("%s ", " ");
+                else printf("%s ", temp);
             }
             else{
                 printf("%s ",echoEnv);
-                temp++;
-                temp[strlen(temp)-1] = '\0';
-                printf("%s\n",getenv(temp));
             }
-        }
+			}
+			printf("\n");
     }
     else if(pwdFlag){
         printf("%s\n",getcwd(NULL,0));

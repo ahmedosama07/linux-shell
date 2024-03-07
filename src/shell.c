@@ -12,8 +12,12 @@
 char input[ARRAY_SIZE];
 char *parsedInput[ARRAY_SIZE];
 
-int counter = 0, exportFlag = 0, echoFlag = 0, cdFlag = 0, pwdFlag = 0;
-int backGroundIndex = 0, exitFlag = 0;
+int export_flag = 0;
+int echo_flag = 0;
+int cd_flag = 0;
+int pwd_flag = 0;
+int exitFlag = 0;
+int last_arg = 0;
 
 /* Function to get input from the user */
 void read_input(void){
@@ -24,12 +28,11 @@ void read_input(void){
     gethostname(hostname, sizeof(hostname));
     printf("%s@%s:%s $ ", username, hostname,replace_substring(getcwd(cwd , 100), getenv("HOME"), "~"));
     while (1) {
-        fgets(input, sizeof(input), stdin); // Read input using fgets
-        input[strcspn(input, "\n")] = '\0'; // Remove trailing newline character
+        fgets(input, sizeof(input), stdin);
+        input[strcspn(input, "\n")] = '\0';
         
-        // Check if input is empty
         if (strlen(input) > 0) {
-            break; // Exit loop if input is not empty
+            break;
         }
 		printf("%s@%s:%s $ ", username, hostname, replace_substring(getcwd(cwd, 100), getenv("HOME"), "~"));
     }
@@ -37,27 +40,28 @@ void read_input(void){
 
 
 /* Function to parse export input */
-void parse_export(char * token){
+void parse_export(char * token, int* counter){
     while(token != NULL){
-            parsedInput[counter] = token;
+            parsedInput[(*counter)] = token;
             token = strtok(NULL,"=");
-            counter++;
+            (*counter)++;
         }
-        parsedInput[counter] = '\0';
-        counter = 0;
+        parsedInput[*counter] = '\0';
+        (*counter) = 0;
 }
 
 /* Function to parse input */
 void parse_input(void){
+	int counter = 0;
     char*token = strtok(input , " ");
     if(strcmp(token , "export") == 0){
-        parse_export(token);
-        exportFlag = 1;
+        parse_export(token, &counter);
+        export_flag = 1;
     }
     else{
-        if(strcmp(token , "cd") == 0) cdFlag = 1;
-        if(strcmp(token , "echo") == 0) echoFlag = 1;
-        if(strcmp(token , "pwd") == 0) pwdFlag = 1;
+        if(strcmp(token , "cd") == 0) cd_flag = 1;
+        if(strcmp(token , "echo") == 0) echo_flag = 1;
+        if(strcmp(token , "pwd") == 0) pwd_flag = 1;
         if(strcmp(token , "exit") == 0) exitFlag = 1;
       while (token != NULL)
       {
@@ -66,14 +70,14 @@ void parse_input(void){
           counter++;
       }   
       parsedInput[counter] = '\0' ;
-      backGroundIndex = counter - 1;
+      last_arg = counter - 1;
       counter = 0;
     }
 }
 
 /* Function to execute built-in shell commands */
 void execute_shell_bultin(void){
-    if(cdFlag){
+    if(cd_flag){
         if((parsedInput[1] == NULL) || ((strcmp(parsedInput[1],"~")==0))){
         chdir(getenv("HOME"));    
         }
@@ -86,8 +90,8 @@ void execute_shell_bultin(void){
             }
         }
     }
-    else if(exportFlag){
-		extern char **environ; // Declare the environment variables array
+    else if(export_flag){
+		extern char **environ;
 		if (parsedInput[1] == NULL)
 		{
 			for (int i = 0; environ[i] != NULL; i++) {
@@ -102,23 +106,22 @@ void execute_shell_bultin(void){
 			}
 			else{
 				char* data = remove_leading_spaces(parsedInput[2]);
-				/* Check for quotation marks */
-			if(data[0] == '"'){
-				data++;
-				data[strlen(data)-1] = '\0';
-				setenv(env, data , 1);
-			}
-			else{
-				setenv(env, data , 1);
-			}
+				if(data[0] == '"'){
+					data++;
+					data[strlen(data)-1] = '\0';
+					setenv(env, data , 1);
+				}
+				else{
+					setenv(env, data , 1);
+				}
 			}
 			
 		}
 		
     }
-    else if(echoFlag){
+    else if(echo_flag){
 			int i = 1;
-			for(i = 1; i <= backGroundIndex; i++)
+			for(i = 1; i <= last_arg; i++)
 			{
 				char *echoEnv = remove_quotes(parsedInput[i]);
 				if(echoEnv[0] == '$'){
@@ -133,7 +136,7 @@ void execute_shell_bultin(void){
 			}
 			printf("\n");
     }
-    else if(pwdFlag){
+    else if(pwd_flag){
         printf("%s\n",getcwd(NULL,0));
     }
 }
@@ -142,13 +145,10 @@ void execute_shell_bultin(void){
 void execute_command (void){
 	int errorCommand = 0;
 	pid_t pid = fork();
-
-	
 	if (pid < 0) {
-        fprintf(stderr, "Fork failed.\n");
+        printf("Fork failed.\n");
         exit(EXIT_FAILURE);
     } else if (pid == 0) {
-        // Child process
 		if((parsedInput[1] != NULL) && (parsedInput[1][0] == '$')){
 				char* env = parsedInput[1];
                 int  i = 1;
@@ -167,8 +167,7 @@ void execute_command (void){
             exit(EXIT_FAILURE);
         }
     } else {
-        // Parent process
-		if (strcmp(parsedInput[backGroundIndex] , "&")==0)
+		if (strcmp(parsedInput[last_arg] , "&")==0)
 		{
 			printf("PID: %d\n", pid);
 		}
@@ -218,12 +217,12 @@ void shell(void){
               exitFlag = 0;
               exit(EXIT_FAILURE);
           }
-          else if(cdFlag || pwdFlag || exportFlag || echoFlag){
+          else if(cd_flag || pwd_flag || export_flag || echo_flag){
               execute_shell_bultin();
-              cdFlag = 0;
-              pwdFlag = 0;
-              exportFlag = 0;
-              echoFlag = 0;
+              cd_flag = 0;
+              pwd_flag = 0;
+              export_flag = 0;
+              echo_flag = 0;
         }
         else{
             execute_command();

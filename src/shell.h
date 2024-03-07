@@ -11,10 +11,10 @@
 #include <signal.h>
 #include <sys/resource.h>
 
-#define ARRAY_SIZE 100
+#define ARRAY_SIZE 1024
 
 void read_input(void);
-void parse_export(char *token);
+void parse_export(char *token, int* counter);
 void parse_input(void);
 void execute_command(void);
 uint8_t execute_shell_builtin(void);

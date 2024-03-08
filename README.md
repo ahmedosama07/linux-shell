@@ -4,6 +4,8 @@ This is a simple shell program written in C. It provides basic functionality suc
 
 ## File Structure
 
+- `src/strings.h`: Header file containing string manipulation functions declarations.
+- `src/strings.c`: Source file containing string manipulation functions definitions.
 - `src/shell.h`: Header file containing function declarations and constants.
 - `src/shell.c`: Source file containing function definitions for the shell program.
 - `src/main.c`: Source file containing the main function to run the shell program.
